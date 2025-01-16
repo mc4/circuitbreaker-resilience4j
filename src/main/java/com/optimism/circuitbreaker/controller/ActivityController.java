@@ -10,6 +10,7 @@ import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 
 import com.optimism.circuitbreaker.model.Activity;
+import com.optimism.circuitbreaker.service.ActivityService;
 
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import lombok.extern.slf4j.Slf4j;
@@ -20,12 +21,14 @@ import lombok.extern.slf4j.Slf4j;
 public class ActivityController {
 
 	private RestTemplate restTemplate;
+	private ActivityService activityService;
 
 	@Value("${bored.api}")
 	private String BORED_API;
 
-	public ActivityController(final RestTemplate restTemplate) {
+	public ActivityController(final RestTemplate restTemplate, final ActivityService activityService) {
 		this.restTemplate = restTemplate;
+		this.activityService = activityService;
 	}
 
 	@GetMapping
@@ -34,6 +37,7 @@ public class ActivityController {
 	public String getRandomActivity() {
 		final ResponseEntity<Activity> responseEntity = restTemplate.getForEntity(BORED_API, Activity.class);
 		final Activity activity = responseEntity.getBody();
+		activityService.saveActivity(activity);
 		log.info("Activity: " + activity.toString());
 		return activity.getActivity();
 	}
